@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -11,12 +13,29 @@ from .serializers import LicencaSerializer, NotificacaoSerializer, OrgaoEmissorS
 from .services import licencas_criticas
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+    retrieve=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+)
 class OrgaoEmissorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = OrgaoEmissor.objects.all()
     serializer_class = OrgaoEmissorSerializer
     permission_classes = [IsAuthenticated]
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Licenciamento (Módulo 3)"],
+        parameters=[
+            OpenApiParameter("projeto", OpenApiTypes.INT, OpenApiParameter.QUERY, required=False),
+        ],
+    ),
+    retrieve=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+    create=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+    update=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+    partial_update=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+    destroy=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+)
 class LicencaViewSet(viewsets.ModelViewSet):
     queryset = Licenca.objects.select_related("projeto", "orgao").all()
     serializer_class = LicencaSerializer
@@ -30,6 +49,11 @@ class LicencaViewSet(viewsets.ModelViewSet):
         return qs
 
 
+@extend_schema(
+    summary="Painel de licenças críticas",
+    tags=["Licenciamento (Módulo 3)"],
+    responses={200: OpenApiTypes.OBJECT, 403: OpenApiTypes.OBJECT},
+)
 class LicenciamentoAlertasView(APIView):
     """Dashboard: apenas licenças críticas (Admin/Gestor)."""
 
@@ -46,6 +70,21 @@ class LicenciamentoAlertasView(APIView):
         )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Licenciamento (Módulo 3)"],
+        parameters=[
+            OpenApiParameter(
+                "todas",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Use `1` para incluir notificações já lidas.",
+            ),
+        ],
+    ),
+    retrieve=extend_schema(tags=["Licenciamento (Módulo 3)"]),
+)
 class NotificacaoViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -65,6 +104,11 @@ class NotificacaoViewSet(
             qs = qs.filter(lida=False)
         return qs
 
+    @extend_schema(
+        summary="Marcar notificação como lida",
+        tags=["Licenciamento (Módulo 3)"],
+        responses={200: OpenApiTypes.OBJECT},
+    )
     @action(detail=True, methods=["patch"], url_path="ler")
     def ler(self, request, pk=None):
         notif = self.get_object()

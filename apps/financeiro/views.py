@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,6 +11,38 @@ from .serializers import EntradaSerializer, GastoSerializer
 from .services import aplicar_filtros_transacoes, montar_resumo_financeiro
 
 
+@extend_schema(
+    summary="Resumo financeiro agregado",
+    description=(
+        "RF04 — Agregação de entradas e saídas no período, com totais por categoria e por projeto. "
+        "Disponível apenas para perfis autorizados (Admin/Gestor)."
+    ),
+    tags=["Financeiro (Módulo 1)"],
+    parameters=[
+        OpenApiParameter(
+            name="start_date",
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="Início do período (YYYY-MM-DD).",
+        ),
+        OpenApiParameter(
+            name="end_date",
+            type=OpenApiTypes.DATE,
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="Fim do período (YYYY-MM-DD).",
+        ),
+        OpenApiParameter(
+            name="project_id",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            required=False,
+            description="Filtrar por projeto.",
+        ),
+    ],
+    responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT, 403: OpenApiTypes.OBJECT},
+)
 class FinanceiroResumoView(APIView):
     permission_classes = [IsAuthenticated, PodeVerResumoFinanceiroGlobal]
 
@@ -40,6 +74,29 @@ class FinanceiroResumoView(APIView):
         return Response(payload)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Listar transações (entrada + saída)",
+        description=(
+            "Lista unificada de entradas e saídas. Cada item inclui `tipo`: `entrada` ou `saida`."
+        ),
+        tags=["Financeiro (Módulo 1)"],
+        parameters=[
+            OpenApiParameter("projeto", OpenApiTypes.INT, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("categoria", OpenApiTypes.STR, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("start_date", OpenApiTypes.DATE, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("end_date", OpenApiTypes.DATE, OpenApiParameter.QUERY, required=False),
+        ],
+        responses={200: OpenApiTypes.OBJECT},
+    ),
+    create=extend_schema(
+        summary="Criar transação",
+        description='Corpo deve incluir `tipo`: `entrada` ou `saida` e os campos do serializer correspondente.',
+        tags=["Financeiro (Módulo 1)"],
+        request=OpenApiTypes.OBJECT,
+        responses={201: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+    ),
+)
 class TransacaoViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 

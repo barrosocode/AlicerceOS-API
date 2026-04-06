@@ -1,3 +1,5 @@
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -9,6 +11,24 @@ from .serializers import (
 )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Listar projetos com indicadores de execução",
+        description=(
+            "Inclui `gastos_reais_total`, `progresso_barra_percentual`, `valor_total_orcamento_itens` e demais campos do projeto."
+        ),
+        tags=["Projetos (Módulo 2)"],
+        responses={200: OpenApiTypes.OBJECT},
+    ),
+    retrieve=extend_schema(tags=["Projetos (Módulo 2)"]),
+    update=extend_schema(tags=["Projetos (Módulo 2)"]),
+    partial_update=extend_schema(
+        summary="Atualizar projeto (ex.: status)",
+        description="Transição para `ativo` exige perfil Admin ou Gestor (RBAC).",
+        tags=["Projetos (Módulo 2)"],
+        responses={200: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+    ),
+)
 class ProjetoViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -27,6 +47,19 @@ class ProjetoViewSet(
         return ctx
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Projetos (Módulo 2)"],
+        parameters=[
+            OpenApiParameter("projeto", OpenApiTypes.INT, OpenApiParameter.QUERY, required=False),
+        ],
+    ),
+    retrieve=extend_schema(tags=["Projetos (Módulo 2)"]),
+    create=extend_schema(tags=["Projetos (Módulo 2)"]),
+    update=extend_schema(tags=["Projetos (Módulo 2)"]),
+    partial_update=extend_schema(tags=["Projetos (Módulo 2)"]),
+    destroy=extend_schema(tags=["Projetos (Módulo 2)"]),
+)
 class OrcamentoItemViewSet(viewsets.ModelViewSet):
     queryset = OrcamentoItem.objects.select_related("projeto", "parceiro").all()
     serializer_class = OrcamentoItemSerializer
@@ -40,6 +73,19 @@ class OrcamentoItemViewSet(viewsets.ModelViewSet):
         return qs
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Projetos (Módulo 2)"],
+        parameters=[
+            OpenApiParameter("projeto", OpenApiTypes.INT, OpenApiParameter.QUERY, required=False),
+        ],
+    ),
+    retrieve=extend_schema(tags=["Projetos (Módulo 2)"]),
+    create=extend_schema(tags=["Projetos (Módulo 2)"]),
+    update=extend_schema(tags=["Projetos (Módulo 2)"]),
+    partial_update=extend_schema(tags=["Projetos (Módulo 2)"]),
+    destroy=extend_schema(tags=["Projetos (Módulo 2)"]),
+)
 class RelatorioAtividadeViewSet(viewsets.ModelViewSet):
     queryset = RelatorioAtividade.objects.select_related("projeto").all()
     serializer_class = RelatorioAtividadeSerializer
