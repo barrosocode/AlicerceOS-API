@@ -1,0 +1,35 @@
+# RF08 / tarefas agendadas: docker compose run --rm web python manage.py verificar_vencimentos
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME:-alicerce}
+      POSTGRES_USER: ${DB_USER:-alicerce}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-alicerce}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-alicerce} -d ${DB_NAME:-alicerce}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
