@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "drf_spectacular",
     "apps.accounts",
     "apps.core",
     "apps.licenciamento",
@@ -91,6 +92,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -104,3 +106,30 @@ EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
 )
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Alicerce OS — API",
+    "DESCRIPTION": (
+        "Motor da JELL: autenticação, financeiro, projetos/orçamentos, licenciamento e alertas. "
+        "Fonte normativa: `docs/specs/` e `docs/project/ENGINEERING_GUIDE.md` (Seção 6 — commits)."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SECURITY": [{"bearerAuth": []}],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+    "TAGS": [
+        {"name": "Autenticação (Módulo 0)", "description": "JWT e controle de acesso."},
+        {"name": "Financeiro (Módulo 1)", "description": "RF03/RF04 — fluxo de caixa e agregações."},
+        {"name": "Projetos (Módulo 2)", "description": "RF05/RF06 — projetos, orçamento e diário de obra."},
+        {"name": "Licenciamento (Módulo 3)", "description": "RF07/RF08 — licenças e notificações."},
+    ],
+}
